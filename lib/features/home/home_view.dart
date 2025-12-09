@@ -15,16 +15,17 @@ class HomeView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(
-                onPressed: () {
-                  AppLocalNotification.showNotification(
-                    notiId: Random().nextInt(1000000),
-                    title: "Test Notification",
-                    body: "This is test notification",
-                  );
-                },
-                child: Text("Local Notification"),
-              ),
+              Text("Push Notification"),
+              // ElevatedButton(
+              //   onPressed: () {
+              //     AppLocalNotification.showNotification(
+              //       notiId: Random().nextInt(1000000),
+              //       title: "Test Notification",
+              //       body: "This is test notification",
+              //     );
+              //   },
+              //   child: Text("Local Notification"),
+              // ),
             ],
           ),
         ),

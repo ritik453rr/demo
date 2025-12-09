@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "99710151128",
+    "project_id": "fir-a9c8f",
+    "storage_bucket": "fir-a9c8f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:99710151128:android:856b128d364c1dcca3aaad",
+        "android_client_info": {
+          "package_name": "com.ritik.demoapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCafHfONXS3PEp22yqPUTOyRr64eki-Cqc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
