@@ -17,6 +17,7 @@ class _ChatViewState extends State<ChatView> {
 
   /// Variables
   var isMyMsg = false;
+  var scrollCtr = ScrollController();
 
   /// Lists
   var msgList = <MessageModel>[];
@@ -36,10 +37,28 @@ class _ChatViewState extends State<ChatView> {
 
     setState(() {
       isMyMsg = !isMyMsg;
-      msgList.insert(0, message); // insert at top (reversed list)
+      msgList.add(message);
     });
 
     msgCtr.clear();
+    scrollToBottom();
+  }
+
+  void scrollToBottom({int time = 70}) {
+    if (!scrollCtr.hasClients) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // scrollCtr.jumpTo(
+      //   scrollCtr.position.maxScrollExtent,
+      //   // duration: const Duration(milliseconds: 300),
+      //   // curve: Curves.easeOut,
+      // );
+      scrollCtr.animateTo(
+        scrollCtr.position.maxScrollExtent,
+        duration: Duration(milliseconds: time),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   /// Format the message date label
@@ -94,16 +113,53 @@ class _ChatViewState extends State<ChatView> {
     }
   }
 
+  final focusNode = FocusNode();
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   focusNode.addListener(() {
+  //     if (focusNode.hasFocus&& scrollCtr.hasClients) {
+  //       // 1. Define a threshold (e.g., 100 pixels from the bottom)
+  //       // extentAfter is the distance from the current bottom of the viewport
+  //       // to the total end of the list.
+  //       double threshold = 100.0;
+  //       bool isNearBottom = scrollCtr.position.extentAfter < threshold;
+
+  //       if (isNearBottom) {
+  //         scrollToBottom();
+  //       }
+  //     }
+  //   });
+  // }
+
   @override
   Widget build(BuildContext context) {
+    // This detects if the keyboard is open
+    final bool isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+
+    // 2. If keyboard is opening, trigger a scroll to the NEW bottom
+    if (isKeyboardVisible && scrollCtr.hasClients) {
+      // We check if the user is already at or near the bottom
+      // before the keyboard finishes pushing the UI up.
+      if (scrollCtr.position.extentAfter < 200) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          // if (scrollCtr.hasClients) {
+            // Jump to maxScrollExtent. The +40 ensures it clears any
+            // extra padding you might have at the bottom.
+            scrollCtr.jumpTo(scrollCtr.position.maxScrollExtent);
+          // }
+        });
+      }
+    }
     return Scaffold(
-      resizeToAvoidBottomInset: true,
       appBar: custommAppBar(title: "ChatView"),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             // mainAxisAlignment: MainAxisAlignment.start,
+            // mainAxisAlignment: MainAxisAlignment.end,
             children: [
               StreamBuilder<List<MessageModel>>(
                 stream: chatStream(),
@@ -113,9 +169,11 @@ class _ChatViewState extends State<ChatView> {
                       ? Expanded(
                         child: Center(child: Text("Start Conversation")),
                       )
-                      : Flexible(
+                      : 
+                      Expanded(
                         child: ListView.builder(
-                          reverse: true,
+                          controller: scrollCtr,
+
                           padding: EdgeInsets.symmetric(vertical: 20),
                           itemCount: msgList.length,
                           itemBuilder: (context, index) {
@@ -124,10 +182,8 @@ class _ChatViewState extends State<ChatView> {
                               msg.createdAt,
                             );
                             bool showDateLabel = false;
-                            if (index == msgList.length - 1 ||
-                                getMessageDateLabel(
-                                      msgList[index + 1].createdAt,
-                                    ) !=
+                            if (index == 0 ||
+                                getMessageDateLabel(msgList[index].createdAt) !=
                                     currentDateLabel) {
                               showDateLabel = true;
                             }
@@ -159,7 +215,9 @@ class _ChatViewState extends State<ChatView> {
                                     Container(
                                       padding: EdgeInsets.all(10),
                                       constraints: BoxConstraints(
-                                        maxWidth: 200,
+                                        maxWidth:
+                                            MediaQuery.of(context).size.width *
+                                            0.65,
                                       ),
 
                                       decoration: BoxDecoration(
@@ -172,11 +230,6 @@ class _ChatViewState extends State<ChatView> {
                                         style: TextStyle(color: Colors.white),
                                       ),
                                     ),
-                                    Text(
-                                      formatMessageTime(
-                                        DateTime.parse(msg.createdAt),
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ),
@@ -187,6 +240,9 @@ class _ChatViewState extends State<ChatView> {
                 },
               ),
               2.h,
+              // Flexible(child: SizedBox(
+              //   height: 10,
+              // )),
               _chatInputField(context),
               5.h,
             ],
@@ -202,6 +258,7 @@ class _ChatViewState extends State<ChatView> {
         Expanded(
           child: TextField(
             controller: msgCtr,
+            focusNode: focusNode,
             decoration: InputDecoration(
               hintText: "Type a message...",
               filled: true,

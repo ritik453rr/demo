@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.chat,
+      initialRoute: AppRoutes.home,
       theme: AppTheme.lightTheme(),
       routes: {
         AppRoutes.home: (context) => HomeView(),
