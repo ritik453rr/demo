@@ -4,14 +4,18 @@ import 'package:demo/core/services/app_local_notifications.dart';
 import 'package:demo/core/services/firebase_services.dart';
 import 'package:demo/core/theme/app_colors.dart';
 import 'package:demo/core/theme/app_theme.dart';
-import 'package:demo/features/chat/view/chat_view.dart';
+import 'package:demo/features/auth/view/login/login_view.dart';
+import 'package:demo/features/messages/view/chat_view.dart';
 import 'package:demo/features/home/home_view.dart';
+import 'package:demo/features/share/share_view.dart';
+import 'package:demo/storage/app_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   AppLocalNotification.initialize();
+  await AppStorage.init();
   AppConstants.setSafeArea(isDark: false);
   await FirebaseServices.init();
   // var fcmToken = await FirebaseMessaging.instance.getToken();
@@ -24,14 +28,17 @@ class MyApp extends StatelessWidget {
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  build(BuildContext context) async {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.home,
+      initialRoute:
+          AppStorage.getLoginStatus() ? AppRoutes.home : AppRoutes.login,
       theme: AppTheme.lightTheme(),
       routes: {
+        AppRoutes.login: (context) => LoginView(),
         AppRoutes.home: (context) => HomeView(),
         AppRoutes.chat: (context) => ChatView(),
+        AppRoutes.share: (context) => ShareView(),
       },
     );
   }

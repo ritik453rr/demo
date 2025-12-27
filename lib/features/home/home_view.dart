@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'package:demo/core/common/app_button.dart';
+import 'package:demo/core/routes/app_routes.dart';
 import 'package:demo/core/services/app_local_notifications.dart';
 import 'package:demo/extensions/app_extensions.dart';
 import 'package:flutter/material.dart';
@@ -10,34 +12,24 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
+      appBar: AppBar(title: Text("Home View")),
       body: SafeArea(
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 20),
-          // height: double.infinity,
-          // width: double.infinity,
+          width: double.infinity,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(child: Text("Title")),
-              Column(
-                children: [
-                  TextField(
-                    decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(),
-                    ),
-                  ),
-                  30.h,
-                  Container(
-                    height: 50,
-                    alignment: Alignment.center,
-                    width: double.infinity,
-                    color: Colors.red,
-                    child: Text("Button"),
-                  ),
-                  30.h,
-                ],
+              appButton(
+                title: "Share View",
+                onPressed: () {
+                  Navigator.of(context).pushNamed(AppRoutes.share);
+                },
               ),
+              10.h,
+              appButton(title: "Message View", onPressed: (){
+                Navigator.of(context).pushNamed(AppRoutes.chat);
+              })
             ],
           ),
         ),

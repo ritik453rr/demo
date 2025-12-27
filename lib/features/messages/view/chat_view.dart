@@ -1,6 +1,6 @@
 import 'package:demo/core/common/custom_app_bar.dart';
 import 'package:demo/extensions/app_extensions.dart';
-import 'package:demo/features/chat/model/message_model.dart';
+import 'package:demo/features/messages/model/message_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -26,7 +26,7 @@ class _ChatViewState extends State<ChatView> {
     yield msgList;
   }
 
-  void _sendMessage() {
+  void sendMessage() {
     if (msgCtr.text.trim().isEmpty) return;
 
     final message = MessageModel(
@@ -44,7 +44,7 @@ class _ChatViewState extends State<ChatView> {
     scrollToBottom();
   }
 
-  void scrollToBottom({int time = 70}) {
+  void scrollToBottom({int time = 10}) {
     if (!scrollCtr.hasClients) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -145,9 +145,9 @@ class _ChatViewState extends State<ChatView> {
       if (scrollCtr.position.extentAfter < 200) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           // if (scrollCtr.hasClients) {
-            // Jump to maxScrollExtent. The +40 ensures it clears any
-            // extra padding you might have at the bottom.
-            scrollCtr.jumpTo(scrollCtr.position.maxScrollExtent);
+          // Jump to maxScrollExtent. The +40 ensures it clears any
+          // extra padding you might have at the bottom.
+          scrollCtr.jumpTo(scrollCtr.position.maxScrollExtent);
           // }
         });
       }
@@ -169,8 +169,7 @@ class _ChatViewState extends State<ChatView> {
                       ? Expanded(
                         child: Center(child: Text("Start Conversation")),
                       )
-                      : 
-                      Expanded(
+                      : Expanded(
                         child: ListView.builder(
                           controller: scrollCtr,
 
@@ -277,7 +276,7 @@ class _ChatViewState extends State<ChatView> {
         10.w,
         GestureDetector(
           onTap: () {
-            _sendMessage();
+            sendMessage();
           },
           child: Container(
             padding: const EdgeInsets.all(12),
