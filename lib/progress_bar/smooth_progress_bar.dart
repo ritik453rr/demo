@@ -1,3 +1,4 @@
+import 'package:demo/circle_progress/circle_step_indicator_page.dart';
 import 'package:flutter/material.dart';
 
 class SmoothProgressBarWidget extends StatefulWidget {
@@ -61,9 +62,12 @@ class _SmoothProgressBarWidgetState extends State<SmoothProgressBarWidget> {
                 );
               },
             ),
+            SizedBox(height: 20),
+            CircleStepIndicator(currentStep: 4),
           ],
         ),
       ),
     );
+  
   }
 }
