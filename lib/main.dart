@@ -1,24 +1,75 @@
-import 'package:demo/drag_sheet/drag_sheet_page.dart';
-import 'package:demo/expension_tile/expension_tile_page.dart';
-import 'package:demo/progress_bar/smooth_progress_bar.dart';
-import 'package:demo/progress_bar/step_progress_bar.dart';
+import 'dart:async';
+import 'dart:ui';
+
+import 'package:demo/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'circle_progress/circle_step_indicator_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  /// Runs the app inside a guarded zone to catch all uncaught async errors.
+  runZonedGuarded(() async {
+
+    /// Ensures Flutter engine and binding are initialized before app starts.
+    WidgetsFlutterBinding.ensureInitialized();
+
+    /// Initializes Firebase with platform-specific configuration.
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    /// Crashlytics is not supported on Flutter Web.
+    if (!kIsWeb) {
+
+      /// Enables Crashlytics crash data collection.
+      await FirebaseCrashlytics.instance
+          .setCrashlyticsCollectionEnabled(true);
+
+      /// Captures Flutter framework fatal errors automatically.
+      FlutterError.onError =
+          FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+      /// Captures platform, isolate, and async uncaught errors.
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(
+          error,
+          stack,
+          fatal: true,
+        );
+        return true;
+      };
+    }
+
+    /// Starts the Flutter application.
+    runApp(const MyApp());
+
+  }, (error, stack) {
+
+    /// Records all uncaught zone-level errors into Crashlytics.
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordError(
+        error,
+        stack,
+        fatal: true,
+      );
+    }
+  });
 }
 
+/// Root widget of the application.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+
+    /// Main application configuration.
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home:DragSheetPage()
+      home: CircleStepIndicatorPage(),
     );
   }
 }

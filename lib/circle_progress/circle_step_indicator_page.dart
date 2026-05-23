@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 
 class CircleStepIndicatorPage extends StatefulWidget {
@@ -19,12 +20,13 @@ class _CircleStepIndicatorPageState extends State<CircleStepIndicatorPage> {
         padding: const EdgeInsets.all(16.0),
         child: FloatingActionButton(
           onPressed: () {
-            setState(() {
-              step += 1;
-              if (step > 4) {
-                step = 1;
-              }
-            });
+             FirebaseCrashlytics.instance.crash();
+            // setState(() {
+            //   step += 1;
+            //   if (step > 4) {
+            //     step = 1;
+            //   }
+            // });
           },
           child: const Icon(Icons.add),
         ),
