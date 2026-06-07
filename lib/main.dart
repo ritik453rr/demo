@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:ui';
-
 import 'package:demo/firebase_options.dart';
+import 'package:demo/google_map/map_view.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
@@ -69,7 +68,7 @@ class MyApp extends StatelessWidget {
     /// Main application configuration.
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: CircleStepIndicatorPage(),
+      home: GoogleMapView(),
     );
   }
 }

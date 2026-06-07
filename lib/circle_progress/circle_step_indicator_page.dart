@@ -20,13 +20,12 @@ class _CircleStepIndicatorPageState extends State<CircleStepIndicatorPage> {
         padding: const EdgeInsets.all(16.0),
         child: FloatingActionButton(
           onPressed: () {
-             FirebaseCrashlytics.instance.crash();
-            // setState(() {
-            //   step += 1;
-            //   if (step > 4) {
-            //     step = 1;
-            //   }
-            // });
+            setState(() {
+              step += 1;
+              if (step > 4) {
+                step = 1;
+              }
+            });
           },
           child: const Icon(Icons.add),
         ),
