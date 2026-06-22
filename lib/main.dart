@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'package:demo/firebase_options.dart';
-import 'package:demo/google_map/map_view.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
 import 'circle_progress/circle_step_indicator_page.dart';
 
 void main() {
@@ -68,7 +66,7 @@ class MyApp extends StatelessWidget {
     /// Main application configuration.
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: GoogleMapView(),
+      home:CircleStepIndicatorPage(), // Replace with your desired home page widget
     );
   }
 }

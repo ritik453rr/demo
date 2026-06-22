@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:demo/flush_bar/flush_bar.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 
@@ -20,12 +21,13 @@ class _CircleStepIndicatorPageState extends State<CircleStepIndicatorPage> {
         padding: const EdgeInsets.all(16.0),
         child: FloatingActionButton(
           onPressed: () {
-            setState(() {
-              step += 1;
-              if (step > 4) {
-                step = 1;
-              }
-            });
+            CustomFlushBar.show(context, msg: "Step $step completed!");
+            // setState(() {
+            //   step += 1;
+            //   if (step > 4) {
+            //     step = 1;
+            //   }
+            // });
           },
           child: const Icon(Icons.add),
         ),
