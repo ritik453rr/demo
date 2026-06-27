@@ -40,7 +40,6 @@ class _GoogleLoginPageState extends State<GoogleLoginPage> {
     try {
       if (kIsWeb) {
         final provider = GoogleAuthProvider();
-
         return await FirebaseAuth.instance.signInWithPopup(provider);
       }
 

@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'chat/chat_page.dart';
 import 'circle_progress/circle_step_indicator_page.dart';
 
 void main() {
@@ -65,9 +66,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
 
     /// Main application configuration.
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: GoogleLoginPage(),
+      home: ChatPage(),
     );
   }
 }
