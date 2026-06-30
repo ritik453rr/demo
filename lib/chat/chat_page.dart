@@ -20,14 +20,11 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> scrollToBottom() async {
     if (!scrollController.hasClients) return;
-
-    for (int i = 0; i < 2; i++) {
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      if (!scrollController.hasClients) return;
-
-      scrollController.jumpTo(scrollController.position.maxScrollExtent);
-    }
+    scrollController.animateTo(
+      scrollController.position.maxScrollExtent+80,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
   void sendMessage() {
@@ -54,67 +51,76 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 20),
-            Text(
-              "Chat Page",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            messageList.isEmpty
-                ? Expanded(
-                    child: Center(
-                      child: Text(
-                        "No messages yet",
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 20),
+                Text(
+                  "Chat Page",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                messageList.isEmpty
+                    ? Expanded(
+                        child: Center(
+                          child: Text(
+                            "No messages yet",
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ),
+                      )
+                    : Expanded(
+                        child: ScrollConfiguration(
+                          behavior: ScrollConfiguration.of(
+                            context,
+                          ).copyWith(scrollbars: false),
+                          child: ListView.builder(
+                            // reverse: true,
+                            controller: scrollController,
+                            itemCount: messageList.length,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            itemBuilder: (context, index) {
+                              final msg = messageList[index];
+                              return MsgBubble(
+                                message: msg.message,
+                                timestamp: msg.timestamp,
+                                isCurrentUser: msg.isCurrentUser,
+                              );
+                            },
+                          ),
+                        ),
                       ),
+                TextField(
+                  maxLines: 6,
+                  minLines: 1,
+                  controller: messageController,
+                  decoration: InputDecoration(
+                    hintText: 'Type a message',
+                    border: OutlineInputBorder(),
+                    suffixIconConstraints: BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
                     ),
-                  )
-                : Expanded(
-                    child: ScrollConfiguration(
-                      behavior: ScrollConfiguration.of(
-                        context,
-                      ).copyWith(scrollbars: false),
-                      child: ListView.builder(
-                        controller: scrollController,
-                        itemCount: messageList.length,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        itemBuilder: (context, index) {
-                          final msg = messageList[index];
-                          return MsgBubble(
-                            message: msg.message,
-                            timestamp: msg.timestamp,
-                            isCurrentUser: msg.isCurrentUser,
-                          );
-                        },
-                      ),
+                    suffixIcon: IconButton(
+                      icon: Icon(Icons.send),
+                      onPressed: () {
+                        sendMessage();
+                      },
                     ),
                   ),
-            TextField(
-              maxLines: 6,
-              minLines: 1,
-              controller: messageController,
-              decoration: InputDecoration(
-                hintText: 'Type a message',
-                border: OutlineInputBorder(),
-                suffixIconConstraints: BoxConstraints(
-                  minWidth: 48,
-                  minHeight: 48,
                 ),
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: () {
-                    sendMessage();
-                  },
-                ),
-              ),
+                SizedBox(height: 20),
+              ],
             ),
-            SizedBox(height: 20),
-          ],
+          ),
         ),
       ),
     );
