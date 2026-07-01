@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -220,3 +221,46 @@ class MsgModel {
     };
   }
 }
+
+class ChatModel {
+  final String chatId;
+  final List<String> participants;
+  final String lastMessage;
+  final String lastMessageSenderId;
+  final String lastMessageTime;
+  final String createdAt;
+
+  const ChatModel({
+    required this.chatId,
+    required this.participants,
+    required this.lastMessage,
+    required this.lastMessageSenderId,
+    required this.lastMessageTime,
+    required this.createdAt,
+  });
+
+  factory ChatModel.fromJson(Map<String, dynamic> json) {
+    return ChatModel(
+      chatId: json['chatId'] ?? '',
+      participants: List<String>.from(json['participants'] ?? []),
+      lastMessage: json['lastMessage'] ?? '',
+      lastMessageSenderId: json['lastMessageSenderId'] ?? '',
+      lastMessageTime: json['lastMessageTime'] ?? '',
+          createdAt: json['createdAt'] ?? ''
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'chatId': chatId,
+      'participants': participants,
+      'lastMessage': lastMessage,
+      'lastMessageSenderId': lastMessageSenderId,
+      'lastMessageTime': lastMessageTime,
+      'createdAt': createdAt,
+    };
+  }
+
+
+}
+

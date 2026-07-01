@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:demo/chat/chat_list_page.dart';
 import 'package:demo/firebase_options.dart';
 import 'package:demo/google_login/google_login_page.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -67,7 +68,7 @@ class MyApp extends StatelessWidget {
     /// Main application configuration.
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ChatPage(),
+      home: ChatListPage(),
     );
   }
 }
