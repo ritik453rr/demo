@@ -1,50 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 /// Event model representing schedule status items.
 enum EventStatus { confirmed, completed, cancelled }
 
 class SchedulerPage extends StatefulWidget {
-  const SchedulerPage({super.key});
+  /// Initial focused date when opening calendar
+  final DateTime? initialFocusedDay;
+
+  const SchedulerPage({
+    super.key,
+    this.initialFocusedDay,
+  });
 
   @override
   State<SchedulerPage> createState() => _SchedulerPageState();
 }
 
 class _SchedulerPageState extends State<SchedulerPage> {
-  DateTime _focusedDate = DateTime(2025, 7, 16);
-  DateTime? _selectedDate = DateTime(2025, 7, 16);
+  CalendarFormat _calendarFormat = CalendarFormat.month;
 
-  // Mock events map for status dots and highlights
-  final Map<DateTime, List<EventStatus>> _events = {
-    DateTime(2025, 7, 14): [EventStatus.confirmed, EventStatus.completed],
-    DateTime(2025, 7, 16): [
-      EventStatus.cancelled,
-      EventStatus.confirmed,
-      EventStatus.confirmed,
-    ],
-    DateTime(2025, 7, 18): [EventStatus.cancelled],
-    DateTime(2025, 7, 25): [EventStatus.confirmed],
-  };
+  late DateTime _focusedDay;
+  DateTime? _selectedDay;
 
-  // Special highlighted days (light green background like 20 and 27 in screenshot)
-  final Set<DateTime> _highlightedDays = {
-    DateTime(2025, 7, 20),
-    DateTime(2025, 7, 27),
-  };
+  late final Map<DateTime, List<EventStatus>> _events;
+  late final Set<DateTime> _highlightedDays;
 
-  // ---------------------------------------------------------------------------
-  // Helper Utils (Kept on the same page)
-  // ---------------------------------------------------------------------------
+  @override
+  void initState() {
+    super.initState();
 
-  bool isSameDay(DateTime? a, DateTime? b) {
-    if (a == null || b == null) return false;
-    return a.year == b.year && a.month == b.month && a.day == b.day;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    _focusedDay = widget.initialFocusedDay ?? today;
+    _selectedDay = _focusedDay;
+
+    _events = {
+      today: [
+        EventStatus.cancelled,
+        EventStatus.confirmed,
+        EventStatus.completed,
+      ],
+      today.add(const Duration(days: 2)): [
+        EventStatus.confirmed,
+        EventStatus.completed,
+      ],
+      today.add(const Duration(days: 5)): [EventStatus.cancelled],
+      today.add(const Duration(days: 8)): [EventStatus.confirmed],
+      today.add(const Duration(days: 12)): [
+        EventStatus.completed,
+        EventStatus.confirmed,
+      ],
+      today.add(const Duration(days: 15)): [
+        EventStatus.cancelled,
+        EventStatus.completed,
+      ],
+    };
+
+    _highlightedDays = {
+      today.add(const Duration(days: 4)),
+      today.add(const Duration(days: 11)),
+    };
   }
 
   List<EventStatus> _getEventsForDay(DateTime day) {
-    for (var key in _events.keys) {
-      if (isSameDay(key, day)) {
-        return _events[key]!;
+    for (var entry in _events.entries) {
+      if (isSameDay(entry.key, day)) {
+        return entry.value;
       }
     }
     return [];
@@ -54,34 +76,15 @@ class _SchedulerPageState extends State<SchedulerPage> {
     return _highlightedDays.any((d) => isSameDay(d, day));
   }
 
-  void _previousMonth() {
-    setState(() {
-      _focusedDate = DateTime(_focusedDate.year, _focusedDate.month - 1, 1);
-    });
-  }
-
-  void _nextMonth() {
-    setState(() {
-      _focusedDate = DateTime(_focusedDate.year, _focusedDate.month + 1, 1);
-    });
-  }
-
-  String _getMonthName(int month) {
-    const monthNames = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December'
-    ];
-    return monthNames[month - 1];
+  Color _getStatusColor(EventStatus status) {
+    switch (status) {
+      case EventStatus.confirmed:
+        return const Color(0xFF22C55E); // Green
+      case EventStatus.completed:
+        return const Color(0xFFF59E0B); // Amber / Yellow
+      case EventStatus.cancelled:
+        return const Color(0xFFEF4444); // Red
+    }
   }
 
   @override
@@ -89,17 +92,15 @@ class _SchedulerPageState extends State<SchedulerPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FD),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: _buildCalendarCard(),
-          ),
-        ),
+        child: Center(child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: _buildCalendarCard(),
+        ))
       ),
     );
-  }
+  } 
 
-  /// Main Calendar Card Container
+  /// Main Calendar Card Container using TableCalendar
   Widget _buildCalendarCard() {
     return Container(
       decoration: BoxDecoration(
@@ -117,11 +118,138 @@ class _SchedulerPageState extends State<SchedulerPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildMonthHeader(),
-          const SizedBox(height: 16),
-          _buildWeekdayHeader(),
-          const SizedBox(height: 8),
-          _buildDaysGrid(),
+          TableCalendar<EventStatus>(
+            firstDay: DateTime.now(), // Calendar Start Limit
+            lastDay: DateTime.now().add(
+              const Duration(days: 365),
+            ), // Calendar End Limit
+            focusedDay: _focusedDay,
+            calendarFormat: _calendarFormat,
+            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+            eventLoader: _getEventsForDay,
+            startingDayOfWeek: StartingDayOfWeek.sunday,
+            onDaySelected: (selectedDay, focusedDay) {
+              if (!isSameDay(_selectedDay, selectedDay)) {
+                setState(() {
+                  _selectedDay = selectedDay;
+                  _focusedDay = focusedDay;
+                });
+              }
+            },
+            onFormatChanged: (format) {
+              if (_calendarFormat != format) {
+                setState(() {
+                  _calendarFormat = format;
+                });
+              }
+            },
+            onPageChanged: (focusedDay) {
+              _focusedDay = focusedDay;
+            },
+            headerStyle: HeaderStyle(
+              titleCentered: true,
+              formatButtonVisible: false,
+              titleTextStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF111827),
+              ),
+              leftChevronIcon: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.chevron_left_rounded,
+                  color: Color(0xFF374151),
+                  size: 20,
+                ),
+              ),
+              rightChevronIcon: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFF374151),
+                  size: 20,
+                ),
+              ),
+            ),
+            daysOfWeekStyle: const DaysOfWeekStyle(
+              weekdayStyle: TextStyle(
+                color: Color(0xFF9CA3AF),
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+              weekendStyle: TextStyle(
+                color: Color(0xFF9CA3AF),
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+            ),
+            calendarStyle: const CalendarStyle(outsideDaysVisible: false),
+            calendarBuilders: CalendarBuilders(
+              defaultBuilder: (context, day, focusedDay) {
+                if (_isHighlightedDay(day)) {
+                  return _buildDayCell(
+                    day,
+                    backgroundColor: const Color(0xFFECFDF5),
+                    textColor: const Color(0xFF047857),
+                    isBold: true,
+                  );
+                }
+                return _buildDayCell(day, textColor: const Color(0xFF374151));
+              },
+              selectedBuilder: (context, day, focusedDay) {
+                return _buildDayCell(
+                  day,
+                  backgroundColor: const Color(0xFFE5E7EB),
+                  textColor: const Color(0xFF111827),
+                  isBold: true,
+                );
+              },
+              todayBuilder: (context, day, focusedDay) {
+                if (isSameDay(_selectedDay, day)) {
+                  return _buildDayCell(
+                    day,
+                    backgroundColor: const Color(0xFFE5E7EB),
+                    textColor: const Color(0xFF111827),
+                    isBold: true,
+                  );
+                }
+                return _buildDayCell(
+                  day,
+                  backgroundColor: const Color(0xFFF3F4F6),
+                  textColor: const Color(0xFF111827),
+                  isBold: true,
+                );
+              },
+              markerBuilder: (context, day, events) {
+                if (events.isEmpty) return const SizedBox.shrink();
+                return Positioned(
+                  bottom: 6,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: events.map((event) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                        width: 4.5,
+                        height: 4.5,
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(event),
+                          shape: BoxShape.circle,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
+            ),
+          ),
           const SizedBox(height: 16),
           const Divider(height: 1, color: Color(0xFFF3F4F6)),
           const SizedBox(height: 14),
@@ -131,193 +259,33 @@ class _SchedulerPageState extends State<SchedulerPage> {
     );
   }
 
-  /// Month & Year Navigation Header (< July 2025 >)
-  Widget _buildMonthHeader() {
-    final title = '${_getMonthName(_focusedDate.month)} ${_focusedDate.year}';
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        GestureDetector(
-          onTap: _previousMonth,
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.chevron_left_rounded,
-              color: Color(0xFF374151),
-              size: 20,
-            ),
-          ),
-        ),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF111827),
-          ),
-        ),
-        GestureDetector(
-          onTap: _nextMonth,
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFF374151),
-              size: 20,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Weekday Names Header Row (Sun, Mon, Tue, Wed, Thu, Fri, Sat)
-  Widget _buildWeekdayHeader() {
-    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: daysOfWeek.map((day) {
-        return Expanded(
-          child: Center(
-            child: Text(
-              day,
-              style: const TextStyle(
-                color: Color(0xFF9CA3AF),
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  /// Grid of Calendar Days
-  Widget _buildDaysGrid() {
-    final daysInMonth = DateTime(_focusedDate.year, _focusedDate.month + 1, 0).day;
-    final firstDayWeekday = DateTime(_focusedDate.year, _focusedDate.month, 1).weekday % 7;
-
-    final totalGridItems = daysInMonth + firstDayWeekday;
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: totalGridItems,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 7,
-        childAspectRatio: 1.0,
-      ),
-      itemBuilder: (context, index) {
-        if (index < firstDayWeekday) {
-          return const SizedBox.shrink();
-        }
-
-        final dayNumber = index - firstDayWeekday + 1;
-        final date = DateTime(_focusedDate.year, _focusedDate.month, dayNumber);
-        final isSelected = isSameDay(_selectedDate, date);
-
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedDate = date;
-            });
-          },
-          child: _buildCustomDayCell(date, isSelected: isSelected),
-        );
-      },
-    );
-  }
-
-  /// Custom Cell Builder for Calendar Days
-  Widget _buildCustomDayCell(DateTime day, {bool isSelected = false}) {
-    final events = _getEventsForDay(day);
-    final isHighlighted = _isHighlightedDay(day);
-
-    BoxDecoration decoration;
-    if (isSelected) {
-      decoration = BoxDecoration(
-        color: const Color(0xFFEEF2FF),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFC7D2FE), width: 1),
-      );
-    } else if (isHighlighted) {
-      decoration = BoxDecoration(
-        color: const Color(0xFFECFDF5),
-        borderRadius: BorderRadius.circular(12),
-      );
-    } else {
-      decoration = const BoxDecoration();
-    }
-
-    Color textColor;
-    if (isSelected) {
-      textColor = const Color(0xFF1E1B4B);
-    } else if (isHighlighted) {
-      textColor = const Color(0xFF047857);
-    } else {
-      textColor = const Color(0xFF374151);
-    }
-
+  Widget _buildDayCell(
+    DateTime day, {
+    Color? backgroundColor,
+    Color? borderColor,
+    required Color textColor,
+    bool isBold = false,
+  }) {
     return Container(
       margin: const EdgeInsets.all(4),
-      decoration: decoration,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: borderColor != null
+            ? Border.all(color: borderColor, width: 1)
+            : null,
+      ),
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '${day.day}',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: (isSelected || isHighlighted)
-                    ? FontWeight.bold
-                    : FontWeight.w500,
-                color: textColor,
-              ),
-            ),
-            if (events.isNotEmpty) ...[
-              const SizedBox(height: 3),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: events.map((status) {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                    width: 4.5,
-                    height: 4.5,
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(status),
-                      shape: BoxShape.circle,
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ],
+        child: Text(
+          '${day.day}',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+            color: textColor,
+          ),
         ),
       ),
     );
-  }
-
-  Color _getStatusColor(EventStatus status) {
-    switch (status) {
-      case EventStatus.confirmed:
-        return const Color(0xFF22C55E); // Green
-      case EventStatus.completed:
-        return const Color(0xFFF59E0B); // Amber / Yellow
-      case EventStatus.cancelled:
-        return const Color(0xFFEF4444); // Red
-    }
   }
 
   /// Calendar Legend Row
