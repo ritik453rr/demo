@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:demo/flush_bar/flush_bar.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 
 class CircleStepIndicatorPage extends StatefulWidget {
