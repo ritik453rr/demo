@@ -1,39 +1,43 @@
+import 'package:demo/app_calendar/app_calendar_one.dart';
+import 'package:demo/service/app_date_time_format_service.dart';
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
 
-/// Event model representing schedule items.
-class EventModel {
-  String eventName;
-  String eventDate;
-  String eventStatus;
-  String createdAt;
-
-  EventModel({
-    required this.eventName,
-    required this.eventDate,
-    required this.eventStatus,
-    required this.createdAt,
-  });
-}
-
-class AppCalendarOne extends StatefulWidget {
-  final CalendarFormat initialCalendarFormat;
-
-  const AppCalendarOne({
-    super.key,
-    this.initialCalendarFormat = CalendarFormat.month,
-  });
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<AppCalendarOne> createState() => _AppCalendarOneState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _AppCalendarOneState extends State<AppCalendarOne> {
-  late DateTime _focusedDay;
-  DateTime? _selectedDay;
-  late CalendarFormat _calendarFormat;
+class _HomePageState extends State<HomePage> {
+  final allEvents = <EventModel>[
+    // 29 August - 2 events
+    EventModel(
+      eventName: 'Firebase Integration',
+      eventDate: '2026-08-29T10:30:00.000Z',
+      eventStatus: 'accepted',
+      createdAt: '2026-08-22T12:10:00.000Z',
+    ),
+    EventModel(
+      eventName: 'API Integration',
+      eventDate: '2026-08-29T15:00:00.000Z',
+      eventStatus: 'completed',
+      createdAt: '2026-08-22T13:00:00.000Z',
+    ),
 
-  final eventList = <EventModel>[
+    // 26 August - 2 events
+    EventModel(
+      eventName: 'Team Meeting',
+      eventDate: '2026-08-26T09:30:00.000Z',
+      eventStatus: 'accepted',
+      createdAt: '2026-08-21T10:15:00.000Z',
+    ),
+    EventModel(
+      eventName: 'Project Planning',
+      eventDate: '2026-08-26T14:00:00.000Z',
+      eventStatus: 'accepted',
+      createdAt: '2026-08-21T11:00:00.000Z',
+    ),
     // 25 August - 3 events
     EventModel(
       eventName: 'Flutter Workshop',
@@ -52,20 +56,6 @@ class _AppCalendarOneState extends State<AppCalendarOne> {
       eventDate: '2026-08-25T16:00:00.000Z',
       eventStatus: 'cancelled',
       createdAt: '2026-08-20T10:00:00.000Z',
-    ),
-
-    // 26 August - 2 events
-    EventModel(
-      eventName: 'Team Meeting',
-      eventDate: '2026-08-26T09:30:00.000Z',
-      eventStatus: 'accepted',
-      createdAt: '2026-08-21T10:15:00.000Z',
-    ),
-    EventModel(
-      eventName: 'Project Planning',
-      eventDate: '2026-08-26T14:00:00.000Z',
-      eventStatus: 'accepted',
-      createdAt: '2026-08-21T11:00:00.000Z',
     ),
 
     // 27 August - 1 event
@@ -94,20 +84,6 @@ class _AppCalendarOneState extends State<AppCalendarOne> {
       eventDate: '2026-08-28T15:30:00.000Z',
       eventStatus: 'accepted',
       createdAt: '2026-08-22T10:00:00.000Z',
-    ),
-
-    // 29 August - 2 events
-    EventModel(
-      eventName: 'Firebase Integration',
-      eventDate: '2026-08-29T10:30:00.000Z',
-      eventStatus: 'accepted',
-      createdAt: '2026-08-22T12:10:00.000Z',
-    ),
-    EventModel(
-      eventName: 'API Integration',
-      eventDate: '2026-08-29T15:00:00.000Z',
-      eventStatus: 'completed',
-      createdAt: '2026-08-22T13:00:00.000Z',
     ),
 
     // 30 August - 1 event
@@ -338,232 +314,204 @@ class _AppCalendarOneState extends State<AppCalendarOne> {
       createdAt: '2026-08-30T11:30:00.000Z',
     ),
   ];
-  
-  late Map<DateTime, List<EventModel>> _eventsByDay;
-
+  final todayEventList = <EventModel>[];
+  final weekEventList = <EventModel>[];
+  final monthEventList = <EventModel>[];
   @override
   void initState() {
     super.initState();
-
-    final now = DateTime.now();
-    _focusedDay = DateTime(now.year, now.month, now.day);
-    _selectedDay = _focusedDay;
-    _calendarFormat = widget.initialCalendarFormat;
-
-    _eventsByDay = _groupEventsByDay();
+    sortEvents();
+    filterAllEventList();
   }
 
-  /// Groups events by calendar day and sorts them by event time.
-  Map<DateTime, List<EventModel>> _groupEventsByDay() {
-  final groupedEvents = <DateTime, List<EventModel>>{};
-
-  // Step 1: Go through every event
-  for (final event in eventList) {
-    final eventDate = DateTime.parse(event.eventDate).toLocal();
-
-    // Step 2: Get only the date
-    final day = DateTime(
-      eventDate.year,
-      eventDate.month,
-      eventDate.day,
+  // sort events based on time
+  void sortEvents() {
+    allEvents.sort(
+      (a, b) =>
+          DateTime.parse(a.eventDate).compareTo(DateTime.parse(b.eventDate)),
     );
+  }
 
-    // Create a list if this day doesn't exist
-    if (!groupedEvents.containsKey(day)) {
-      groupedEvents[day] = [];
+  // filter out events and add into today,week,month list
+  void filterAllEventList() {
+    todayEventList.clear();
+    weekEventList.clear();
+    monthEventList.clear();
+
+    final today = DateTime.now().toLocal();
+    final weekStart = DateTime(today.year, today.month, today.day);
+    final weekEnd = weekStart.add(const Duration(days: 7));
+    final monthStart = DateTime(today.year, today.month, 1);
+    final monthEnd = DateTime(today.year, today.month + 1, 1);
+
+    for (EventModel event in allEvents) {
+      final eventDate = DateTime.parse(event.eventDate).toLocal();
+
+      // Today filter (matches calendar day)
+      if (eventDate.year == today.year &&
+          eventDate.month == today.month &&
+          eventDate.day == today.day) {
+        todayEventList.add(event);
+      }
+
+      // Week filter (7 days starting from today)
+      if (!eventDate.isBefore(weekStart) && eventDate.isBefore(weekEnd)) {
+        weekEventList.add(event);
+      }
+
+      // Month filter (current calendar month)
+      if (!eventDate.isBefore(monthStart) && eventDate.isBefore(monthEnd)) {
+        monthEventList.add(event);
+      }
     }
-
-    // Add the event to that day's list
-    groupedEvents[day]!.add(event);
   }
 
-  // Step 3: Sort events of each day by time
-  for (final events in groupedEvents.values) {
-    events.sort(
-      (a, b) {
-        final timeA = DateTime.parse(a.eventDate);
-        final timeB = DateTime.parse(b.eventDate);
-
-        return timeA.compareTo(timeB);
-      },
-    );
-  }
-
-  return groupedEvents;
-}
-
-  /// Returns all events for the selected calendar day.
-  List<EventModel> _getEventsForDay(DateTime day) {
-    final normalizedDay = DateTime(day.year, day.month, day.day);
-
-    return _eventsByDay[normalizedDay] ?? [];
-  }
-
-  /// Returns the color associated with an event status.
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'accepted':
         return const Color(0xFF22C55E);
-
       case 'completed':
         return const Color(0xFFF59E0B);
-
       case 'cancelled':
         return const Color(0xFFEF4444);
-
       default:
         return const Color(0xFF9CA3AF);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FD),
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: _buildCalendarCard(),
+  Widget _buildEventList(List<EventModel> events) {
+    if (events.isEmpty) {
+      return const Center(
+        child: Text(
+          'No events found',
+          style: TextStyle(
+            fontSize: 14,
+            color: Color(0xFF757575),
+            fontWeight: FontWeight.w400,
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
-  /// Builds the main calendar card.
-  Widget _buildCalendarCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 6),
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      separatorBuilder: (context, index) {
+        return const SizedBox(height: 10);
+      },
+      itemCount: events.length,
+      itemBuilder: (context, index) {
+        final event = events[index];
+        final statusColor = _getStatusColor(event.eventStatus);
+        final formattedDate =
+            AppDateTimeFormatService.fomatToDayMonthYear(event.eventDate);
+        final formattedTime =
+            AppDateTimeFormatService.formatToTime(event.eventDate);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TableCalendar<EventModel>(
-            firstDay: DateTime.now().subtract(const Duration(days: 365)),
-            lastDay: DateTime.now().add(const Duration(days: 365)),
-            focusedDay: _focusedDay,
-            calendarFormat: _calendarFormat,
-            onFormatChanged: (format) {
-              setState(() {
-                _calendarFormat = format;
-              });
-            },
-            selectedDayPredicate: (day) {
-              return isSameDay(_selectedDay, day);
-            },
-            eventLoader: _getEventsForDay,
-            startingDayOfWeek: StartingDayOfWeek.sunday,
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
-              });
-            },
-
-          
-            headerStyle: const HeaderStyle(
-              titleCentered: true,
-              formatButtonVisible: false,
-              titleTextStyle: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            title: Text(
+              event.eventName,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
                 color: Color(0xFF111827),
               ),
             ),
-
-            calendarStyle: const CalendarStyle(outsideDaysVisible: false),
-
-            calendarBuilders: CalendarBuilders(
-              defaultBuilder: (context, day, focusedDay) {
-                return _buildDayCell(day, textColor: const Color(0xFF374151));
-              },
-
-              selectedBuilder: (context, day, focusedDay) {
-                return _buildDayCell(
-                  day,
-                  backgroundColor: const Color(0xFFE5E7EB),
-                  textColor: const Color(0xFF111827),
-                  isBold: true,
-                );
-              },
-
-              todayBuilder: (context, day, focusedDay) {
-                return _buildDayCell(
-                  day,
-                  backgroundColor: const Color(0xFFF3F4F6),
-                  textColor: const Color(0xFF111827),
-                  isBold: true,
-                );
-              },
-
-              markerBuilder: (context, day, events) {
-                if (events.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-
-                return Positioned(
-                  bottom: 6,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: events.take(4).map((event) {
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                        width: 4.5,
-                        height: 4.5,
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(event.eventStatus),
-                          shape: BoxShape.circle,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                );
-              },
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                '$formattedDate  •  $formattedTime',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF6B7280),
+                ),
+              ),
+            ),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                event.eventStatus[0].toUpperCase() +
+                    event.eventStatus.substring(1),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: statusColor,
+                ),
+              ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  /// Builds the calendar day cell.
-  Widget _buildDayCell(
-    DateTime day, {
-    Color? backgroundColor,
-    Color? borderColor,
-    required Color textColor,
-    bool isBold = false,
-  }) {
-    return Container(
-      margin: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-        border: borderColor != null
-            ? Border.all(color: borderColor, width: 1)
-            : null,
-      ),
-      child: Center(
-        child: Text(
-          '${day.day}',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
-            color: textColor,
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TabBar(
+                tabAlignment: TabAlignment.fill,
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicatorColor: const Color(0xFF242424),
+                dividerColor: const Color(0xFFE6E6E6),
+                overlayColor: WidgetStateProperty.all(Colors.transparent),
+                labelColor: const Color(0xFF242424),
+                unselectedLabelColor: const Color(0xFF757575),
+                labelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: -0.1,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: -0.1,
+                ),
+                tabs: const [
+                  Tab(text: 'Today'),
+                  Tab(text: 'Week'),
+                  Tab(text: 'Month'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _buildEventList(todayEventList),
+                    _buildEventList(weekEventList),
+                    _buildEventList(monthEventList),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 }
+

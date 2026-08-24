@@ -1,4 +1,4 @@
-import 'package:demo/app_calendar/app_calendar_one.dart';
+import 'package:demo/home/home_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     /// Main application configuration.
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AppCalendarOne(),
+      home: HomePage(),
     );
   }
 }
